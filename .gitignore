@@ -1,0 +1,14 @@
+node_modules/
+.sites-local/
+artifacts/
+*.tar.gz
+*.log
+.env
+.env.*
+.openai/
+.codex/
+.agents/
+.aws/
+.sites-runtime/
+*.pem
+*.key
