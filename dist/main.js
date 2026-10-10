@@ -1,6 +1,6 @@
-import { Game, LEVELS, MAPS, DIFFICULTIES, GRASS_TYPES } from './engine.js?v=4.0.0';
-import { Progress, ACHIEVEMENTS } from './progress.js?v=4.0.0';
-import { Pasture } from './world.js?v=4.0.0';
+import { Game, LEVELS, MAPS, DIFFICULTIES, GRASS_TYPES } from './engine.js?v=4.0.1';
+import { Progress, ACHIEVEMENTS } from './progress.js?v=4.0.1';
+import { Pasture } from './world.js?v=4.0.1';
 const $=id=>document.getElementById(id), game=new Game();
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let world=null, graphicsError='',best=0,soundEnabled=true,audio,lastStatus='',lastPhase='',lastGrass=0,lastFrame=performance.now(),uiElapsed=0,lastHits=0,lastEscapes=0;
@@ -70,7 +70,7 @@ function updateProgress(){const events=game.events.splice(0),fresh=progress.cons
 function renderMinimap(){
   const map=game.map,ctx=$('minimap').getContext('2d'),sx=x=>(x+map.halfX+1)/(map.halfX*2+2)*150,sz=z=>(z+map.halfZ+1)/(map.halfZ*2+2)*125;
   ctx.clearRect(0,0,150,125);ctx.fillStyle='#dbe5c2';ctx.fillRect(0,0,150,125);ctx.strokeStyle='#b5c591';ctx.lineWidth=1;ctx.strokeRect(4,4,142,117);
-  if(['warning','watch'].includes(game.phase)&&game.mode==='challenge'){ctx.beginPath();ctx.moveTo(sx(game.farmer.x),sz(game.farmer.z));for(let i=0;i<=25;i++){const a=game.farmer.angle-Math.PI*.29+i/25*Math.PI*.58;ctx.lineTo(sx(game.farmer.x+Math.sin(a)*game.rules.viewRadius),sz(game.farmer.z+Math.cos(a)*game.rules.viewRadius));}ctx.closePath();ctx.fillStyle=game.phase==='watch'?'#e3a78066':'#e3c86744';ctx.fill();}
+  if(['warning','watch'].includes(game.phase)&&game.mode==='challenge'){ctx.beginPath();ctx.moveTo(sx(game.farmer.x),sz(game.farmer.z));for(let i=0;i<=25;i++){const a=game.farmer.angle-Math.PI*.29+i/25*Math.PI*.58;ctx.lineTo(sx(game.farmer.x+Math.sin(a)*game.config.viewRadius),sz(game.farmer.z+Math.cos(a)*game.config.viewRadius));}ctx.closePath();ctx.fillStyle=game.phase==='watch'?'#e3a78066':'#e3c86744';ctx.fill();}
   for(const o of [...map.obstacles,...map.bushes]){ctx.beginPath();ctx.arc(sx(o.x),sz(o.z),o.r*150/(map.halfX*2+2),0,Math.PI*2);ctx.fillStyle=o.kind==='barn'?'#b89070':o.kind==='hay'?'#c9af69':o.kind==='pond'?'#8db7b2':o.kind==='windmill'?'#ad936c':'#9fb67d';ctx.fill();}
   for(const p of game.patches)if(p.remaining>0){ctx.beginPath();ctx.arc(sx(p.x),sz(p.z),2.1,0,Math.PI*2);ctx.fillStyle=GRASS_TYPES[p.kind||'normal'].color;ctx.fill();}
   ctx.beginPath();ctx.arc(sx(game.farmer.x),sz(game.farmer.z),3,0,Math.PI*2);ctx.fillStyle=game.enraged?'#bd4a35':'#c98657';ctx.fill();
@@ -83,8 +83,8 @@ function renderUI(){
   $('timeLeft').innerHTML=roam?'∞<em> 自由</em>':`${Math.ceil(game.status==='ready'?c.time:game.time)}<em> 秒</em>`;$('timeLeft').style.color=!roam&&game.time<=15?'#b97d51':'';
   $('grassFill').style.width=roam?'100%':`${Math.min(100,(game.grass+game.bite)/c.goal*100)}%`;
   $('grassBar').setAttribute('aria-valuemax',roam?Math.max(1,game.grass):c.goal);$('grassBar').setAttribute('aria-valuenow',game.grass);
-  $('suspicionLabel').textContent=game.phase==='chase'?'藏身逃脱进度':'饲养员怀疑值';$('suspicionValue').textContent=game.phase==='chase'?`${Math.min(100,Math.round(game.escapeTime/game.escapeRequirement*100))}%`:roam?'放心吃草':`${Math.ceil(game.suspicion)}%`;$('suspicionFill').style.width=`${game.phase==='chase'?Math.min(100,game.escapeTime/2.2*100):game.suspicion}%`;$('suspicionBar').setAttribute('aria-valuenow',Math.ceil(game.suspicion));
-  let phase=game.phase,message={safe:'饲养员正在忙碌 · 自由行动',warning:'他要回头了 · 躲好或站住',watch:'正在巡查 · 小心红色视野'}[phase];
+  $('suspicionLabel').textContent=game.phase==='chase'?'藏身逃脱进度':'饲养员怀疑值';$('suspicionValue').textContent=game.phase==='chase'?`${Math.min(100,Math.round(game.escapeTime/game.escapeRequirement*100))}%`:roam?'放心吃草':`${Math.ceil(game.suspicion)}%`;$('suspicionFill').style.width=`${game.phase==='chase'?Math.min(100,game.escapeTime/game.escapeRequirement*100):game.suspicion}%`;$('suspicionBar').setAttribute('aria-valuenow',Math.ceil(game.suspicion));
+  let phase=game.phase,message={safe:'饲养员正在忙碌 · 自由行动',warning:'他要回头了 · 躲好或站住',watch:`正在巡查 · 警戒半径 ${Math.round(game.config.viewRadius)}`}[phase];
   if(game.phase==='chase'){phase='chase';message=game.farmer.rushWarning>0?'声阻在蓄力！横向闪避':`${game.enraged?'声阻暴怒！':'饲养员追来了！'}坚持 ${Math.ceil(game.phaseTime)} 秒，或藏好 ${game.escapeRequirement.toFixed(1)} 秒`;}else if(game.escapeFlash>0){phase='hidden';message='甩开啦！继续吃草吧';}else if(roam){phase='safe';message='自由漫游 · 冲撞也会引发追赶';}else if(game.hidden){phase='hidden';message='藏在灌木里 · 安全啦';}
   $('farmerStatus').className=`farmer-status ${game.enraged?'enraged':phase}`;$('farmerText').textContent=message;
   $('pauseBtn').disabled=!['playing','paused'].includes(game.status);$('pauseBtn').setAttribute('aria-label',game.status==='paused'?'继续游戏':'暂停游戏');

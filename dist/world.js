@@ -1,7 +1,8 @@
 import * as THREE from './vendor/three.module.js';
-import { angleDifference } from './engine.js?v=4.0.0';
-import { GRASS_TYPES } from './rules.js?v=4.0.0';
-import { cowGait, feederGait } from './gait.js?v=4.0.0';
+import { angleDifference } from './engine.js?v=4.0.1';
+import { GRASS_TYPES } from './rules.js?v=4.0.1';
+import { cowGait, feederGait } from './gait.js?v=4.0.1';
+import { followTarget, cameraDistance } from './camera.js?v=4.0.1';
 
 export class Pasture {
   constructor(canvas, game) {
@@ -13,7 +14,7 @@ export class Pasture {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.2;
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color('#e7eedc'); this.scene.fog = new THREE.Fog('#e7eedc', 42, 90);
     this.camera = new THREE.PerspectiveCamera(45, 1, .1, 130);
-    this.cameraTarget = new THREE.Vector3(game.player.x, .8, game.player.z); this.materials = new Map();
+    this.cameraTarget = new THREE.Vector3(game.player.x, 1.15, game.player.z); this.materials = new Map();
     this.geometries = { sphere: new THREE.SphereGeometry(1, 18, 12), box: new THREE.BoxGeometry(1, 1, 1), cylinder: new THREE.CylinderGeometry(1,1,1,12), cone: new THREE.ConeGeometry(1,1,8) };
     this.scene.add(new THREE.HemisphereLight('#fffbe7', '#879b69', 2.5));
     this.sun = new THREE.DirectionalLight('#fff4d9', 3); this.sun.position.set(-10, 20, 8); this.sun.castShadow = true;
@@ -56,7 +57,7 @@ export class Pasture {
     for(const list of groups.values()){if(list.length<3)continue;const first=list[0],batch=new THREE.InstancedMesh(first.geometry,first.material,list.length);batch.castShadow=first.castShadow;batch.receiveShadow=first.receiveShadow;list.forEach((mesh,i)=>{batch.setMatrixAt(i,mesh.matrixWorld);mesh.parent.remove(mesh);});batch.instanceMatrix.needsUpdate=true;this.environment.add(batch);}
   }
   loadMap(){
-    const shared=new Set(Object.values(this.geometries));this.scene.remove(this.environment);this.environment.traverse(mesh=>{if(mesh.isInstancedMesh)mesh.dispose();if(mesh.geometry&&!shared.has(mesh.geometry))mesh.geometry.dispose();});this.environment=new THREE.Group();this.scene.add(this.environment);this.windmills=[];this.buildEnvironment();this.patches=this.game.patches.map(p=>this.buildPatch(p));this.instanceLandscape();this.mapId=this.game.map.id;this.cowTravel=0;this.feederTravel=0;this.lastCowPosition.set(this.game.player.x,this.game.player.z);this.lastFeederPosition.set(this.game.farmer.x,this.game.farmer.z);this.cameraTarget.set(this.game.player.x,.8,this.game.player.z);
+    const shared=new Set(Object.values(this.geometries));this.scene.remove(this.environment);this.environment.traverse(mesh=>{if(mesh.isInstancedMesh)mesh.dispose();if(mesh.geometry&&!shared.has(mesh.geometry))mesh.geometry.dispose();});this.environment=new THREE.Group();this.scene.add(this.environment);this.windmills=[];this.buildEnvironment();this.patches=this.game.patches.map(p=>this.buildPatch(p));this.instanceLandscape();this.mapId=this.game.map.id;this.cowTravel=0;this.feederTravel=0;this.lastCowPosition.set(this.game.player.x,this.game.player.z);this.lastFeederPosition.set(this.game.farmer.x,this.game.farmer.z);this.cameraTarget.set(this.game.player.x,1.15,this.game.player.z);
   }
   buildPond(o){const ground=this.mesh(this.scene,'cylinder','#b5b98d',[o.x,.07,o.z],[o.r+.2,.09,o.r+.2],false);this.mesh(this.scene,'cylinder','#8bc5c0',[o.x,.12,o.z],[o.r,.06,o.r],false);for(let i=0;i<5;i++){const a=i*1.7;this.sphere(this.scene,'#b0bc8b',o.x+Math.sin(a)*o.r,.15,o.z+Math.cos(a)*o.r,.5,.3,.4);}}
   buildRock(o){const rock=this.sphere(this.scene,'#a7aa99',o.x,.75,o.z,o.r,.9,o.r*.85);rock.rotation.z=.22;this.sphere(this.scene,'#bcc0ad',o.x-.4,.32,o.z+.6,.6,.45,.6);}
@@ -115,14 +116,19 @@ export class Pasture {
     this.rageTelegraph.visible=g.enraged&&g.farmer.rushWarning>0;this.rageTelegraph.position.set(g.farmer.x,.07,g.farmer.z);if(g.farmer.rushDirection)this.rageTelegraph.rotation.y=Math.atan2(g.farmer.rushDirection.x,g.farmer.rushDirection.z);
     this.dust.forEach((particle,i)=>{particle.visible=locomotion&&sprint&&!reducedMotion;const age=(t*2+i/8)%1;particle.position.set(g.player.x-Math.sin(g.player.angle)*(age*1.8+.6)+Math.sin(i)*.2,.08+age*.15,g.player.z-Math.cos(g.player.angle)*(age*1.8+.6));particle.scale.setScalar(.1+age*.16);});
     this.canvas.dataset.cowAnimation=locomotion?(sprint?'gallop':'trot'):'idle';this.canvas.dataset.feederAnimation=feederMoving?(g.phase==='chase'?(g.enraged?'rage-run':'run'):'walk'):'idle';
-    this.cone.scale.set(g.rules.viewRadius/13,1,g.rules.viewRadius/13);this.cone.visible=!ready&&['warning','watch'].includes(g.phase)&&g.mode!=='roam';this.cone.position.set(g.farmer.x,.065,g.farmer.z);this.cone.rotation.y=g.farmer.angle;
+    this.cone.scale.set(g.config.viewRadius/13,1,g.config.viewRadius/13);this.cone.visible=!ready&&['warning','watch'].includes(g.phase)&&g.mode!=='roam';this.cone.position.set(g.farmer.x,.065,g.farmer.z);this.cone.rotation.y=g.farmer.angle;
     this.cone.material.color.set(g.phase==='warning'?'#eac85d':'#e69e7b');this.cone.material.opacity=g.phase==='warning'?.12:.23;
     for(let i=0;i<this.patches.length;i++){const patch=g.patches[i],model=this.patches[i],kind=GRASS_TYPES[patch.kind||'normal'];model.root.position.set(patch.x,.02,patch.z);model.root.visible=patch.remaining>0||patch.regrow<2;model.root.scale.setScalar(patch.remaining>0?.6+patch.remaining*.16:.2);if(model.kind!==patch.kind){model.soil.material=this.mat(kind.soil);model.leaves.forEach(leaf=>leaf.material=this.mat(kind.color));model.kind=patch.kind;}}
     this.targetRing.visible=g.status==='playing'&&g.nearPatch!==null;this.targetRing.material.color.set(g.nearPatch?GRASS_TYPES[g.nearPatch.kind||'normal'].color:'#fff4b2');if(g.nearPatch)this.targetRing.position.set(g.nearPatch.x,.065,g.nearPatch.z);
     this.playerRing.position.set(g.player.x,.045,g.player.z);this.playerRing.material.color.set(g.hidden?'#d5e6ae':g.inSight?'#edb19a':'#fff9dc');
     this.cow.head.scale.setScalar(g.chargeTime>0?1.03:1);this.playerRing.material.color.set(g.enraged?'#df7357':g.speedBoost>0?'#70caba':g.phase==='chase'?'#f39b75':g.hidden?'#d5e6ae':'#fff9dc');
-    const target=new THREE.Vector3(g.player.x,.8,g.player.z-(ready?1:0));this.cameraTarget.lerp(target,reducedMotion?1:1-Math.exp(-dt*12));
-    const vertical=this.camera.aspect<.85?.74:.64;const offset=new THREE.Vector3(Math.sin(this.yaw)*this.distance*Math.cos(vertical),Math.sin(vertical)*this.distance,Math.cos(this.yaw)*this.distance*Math.cos(vertical));
-    this.camera.position.copy(this.cameraTarget).add(offset);this.camera.lookAt(this.cameraTarget);this.renderer.render(this.scene,this.camera);
+    const target=followTarget(this.cameraTarget,g.player,dt,reducedMotion);this.cameraTarget.set(target.x,target.y,target.z);
+    const distance=cameraDistance(this.distance,this.camera.aspect,this.camera.fov),vertical=this.camera.aspect<.85?.74:.64;
+    const offset=new THREE.Vector3(Math.sin(this.yaw)*distance*Math.cos(vertical),Math.sin(vertical)*distance,Math.cos(this.yaw)*distance*Math.cos(vertical));
+    this.camera.position.copy(this.cameraTarget).add(offset);this.camera.lookAt(this.cameraTarget);this.camera.updateMatrixWorld();
+    const projected=new THREE.Vector3(g.player.x,1.15,g.player.z).project(this.camera);
+    this.canvas.dataset.cowScreenX=((projected.x+1)/2).toFixed(3);this.canvas.dataset.cowScreenY=((1-projected.y)/2).toFixed(3);
+    this.canvas.dataset.cameraLag=Math.hypot(target.x-g.player.x,target.z-g.player.z).toFixed(3);this.canvas.dataset.cameraDistance=distance.toFixed(2);this.canvas.dataset.viewRadius=g.config.viewRadius.toFixed(1);
+    this.renderer.render(this.scene,this.camera);
   }
 }

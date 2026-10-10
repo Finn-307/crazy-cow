@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f5f4eb"><meta name="description" content="偷偷吃草 3D：自由奔跑的卡通牧场小游戏。移动奶牛、寻找青草、躲过饲养员的视线，无需登录即可玩。"><title>Crazy Cow · 疯狂奶牛牧场</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=4.0.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f5f4eb"><meta name="description" content="偷偷吃草 3D：自由奔跑的卡通牧场小游戏。移动奶牛、寻找青草、躲过饲养员的视线，无需登录即可玩。"><title>Crazy Cow · 疯狂奶牛牧场</title><link rel="icon" href="./favicon.svg"><link rel="stylesheet" href="./style.css?v=4.0.1">
 </head>
 <body>
 <svg class="svg-defs" aria-hidden="true"><defs>
@@ -34,5 +34,5 @@
 </div>
 <dialog id="rulesDialog"><button class="dialog-close" id="closeRules" aria-label="关闭玩法说明">×</button><p class="eyebrow">THE 3D PASTURE HANDBOOK</p><h2>自由跑动，也要机灵。</h2><ol><li><b>移动与视角：</b>WASD / 方向键移动，Shift 冲刺，F 冲撞；拖动画面或 Q / E 转动视角，滚轮缩放。手机用左侧摇杆移动、右侧按钮吃草或冲撞，支持同时按住多个控件。</li><li><b>找草吃：</b>靠近青草，出现黄色圆环后按住空格或吃草按钮。普通草每束10分；苜蓿降低怀疑，黄金草每束30分，薄荷草加速20%持续6秒。被吃完的草会按难度随机等待，再换位置和品种生长。吃草时会停下。</li><li><b>躲过巡查：</b>黄色预警后饲养员回头，红色扇形是视野。在视野中跑动或吃草会每秒增加 60% 怀疑；静止或离开视野每秒下降 18%。草垛、树木和灌木能遮挡视线，进入灌木可藏身。</li><li><b>选择你的节奏：</b>开局可选悠闲、标准或硬核难度；目标、时间、预警和追赶随难度变化。标准模式在105 / 120 / 135秒内吃完12 / 18 / 24束。自由漫游不计时，仍保留对应难度的追赶。</li><li><b>冲撞与追赶：</b>F 或冲撞按钮让奶牛向前冲。撞中饲养员后，他会愣住0.8秒，然后追赶15 / 18 / 21秒。冲刺、绕过障碍，藏在灌木里2.2秒可以甩开；被追到就失败，包括自由漫游。冲撞每3秒可以使用一次。</li><li><b>隐藏路线：</b>同一关完成三次冲撞追逐并安全逃脱，即可不靠吃满青草通关；同一场追赶多次冲撞只算一次逃脱。</li><li><b>声阻暴怒：</b>悠闲/标准/硬核难度本关撞中4/3/2次后触发。暴怒追赶更快更久，藏身时间增加40%；看到红色冲锋预警时横向闪避。</li><li><b>成就日记：</b>采集、探索、逃脱、隐藏通关及完成挑战都能解锁成就，称号图鉴与各难度最佳分数保存在当前浏览器。</li></ol><p class="dialog-note">P 暂停，R 重置视角。切换窗口自动暂停。最佳挑战分数保存在当前浏览器。网页需要浏览器支持 WebGL 2。</p><button id="gotIt" class="primary">出发吧 <svg><use href="#arrow"/></svg></button></dialog>
 <dialog id="journalDialog"><button class="dialog-close" id="closeJournal" aria-label="关闭牧场日记">×</button><p class="eyebrow">每一次冒险，都值得记住</p><h2>小奶牛的牧场日记</h2><p id="journalSummary" class="journal-summary"></p><div class="journal-best" id="journalBest"></div><section class="title-entry"><span>饲养员隐藏称号</span><h3 id="feederTitle">???</h3><p id="titleDescription"></p></section><div class="achievement-grid" id="achievementGrid"></div><button class="primary" id="journalDone">回到牧场 <svg><use href="#arrow"/></svg></button></dialog><div class="sr-only" id="announcement" aria-live="polite"></div>
-<script type="module" src="./main.js?v=4.0.0"></script>
+<script type="module" src="./main.js?v=4.0.1"></script>
 </body></html>
